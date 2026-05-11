@@ -1,22 +1,31 @@
 const express = require('express');
-const { products } = require('../data/products');
+const productService = require('../services/productService');
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.json({ data: products });
+router.get('/', async (req, res, next) => {
+  try {
+    const data = await productService.listProducts();
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/:id', (req, res) => {
-  const id = Number(req.params.id);
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ error: 'Invalid id' });
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+    const product = await productService.getProductById(id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.json({ data: product });
+  } catch (err) {
+    next(err);
   }
-  const product = products.find((p) => p.id === id);
-  if (!product) {
-    return res.status(404).json({ error: 'Products not found' });
-  }
-  res.json({ data: product });
 });
 
 module.exports = router;
